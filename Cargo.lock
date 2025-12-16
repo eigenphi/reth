@@ -8752,6 +8752,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "reth-exex-mev-pool-discovery"
+version = "1.9.3"
+dependencies = [
+ "alloy-primitives",
+ "alloy-sol-types",
+ "dashmap 6.1.0",
+ "eyre",
+ "futures",
+ "reth-exex",
+ "reth-exex-test-utils",
+ "reth-exex-types",
+ "reth-node-api",
+ "reth-primitives",
+ "reth-tracing",
+ "rocksdb",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "reth-exex-test-utils"
 version = "1.9.3"
 dependencies = [
