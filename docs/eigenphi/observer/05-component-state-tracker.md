@@ -1,14 +1,19 @@
 # 组件设计：Pool State Tracker
 
+> **实现状态**: ✅ 已实现（基础版本）  
+> **实现位置**: `crates/exex/mev-pool-state-tracker/`  
+> **实现日期**: 2025-12-16  
+> **支持协议**: UniswapV2 ✅ | UniswapV3 🚧（接口已保留）
+
 ## 文档元信息
 
 | 项目 | 内容 |
 |------|------|
 | 组件名称 | Pool State Tracker |
-| 文档版本 | v1.0 |
+| 文档版本 | v1.1 |
 | 创建日期 | 2025-12-12 |
-| 最后更新 | 2025-12-12 |
-| 文档状态 | 草稿 |
+| 最后更新 | 2025-12-16 |
+| 文档状态 | 已实现 |
 | 责任人 | 架构组 |
 
 ## 1. 组件概述
@@ -569,6 +574,125 @@ stateDiagram-v2
 | batch_read_size | 批量读取的 Pool 数量 | 平均 < 10 |
 | cache_hit_rate | 缓存命中率 | < 70% |
 | rpc_fallback_rate | 降级到 RPC 的比例 | > 5% |
+
+---
+
+## 9. 实现说明（2025-12-16）
+
+### 9.1 已实现功能
+
+Pool State Tracker 基础版本已实现，代码位于 `crates/exex/mev-pool-state-tracker/`。
+
+#### 核心组件
+
+1. **数据结构** (`raw_state.rs`)
+   - ✅ `RawPoolState` 枚举
+   - ✅ `UniswapV2State` 结构体
+   - ✅ `UniswapV3State` 结构体（接口已保留，待实现）
+   - ✅ Slot 8 解析逻辑（112+112+32 bits）
+   - ✅ 数据验证方法
+
+2. **State Tracker** (`tracker.rs`)
+   - ✅ `PoolStateTracker<P>` 泛型结构
+   - ✅ `track_pool_state()` - 单个 pool 读取
+   - ✅ `track_multiple_states()` - 批量并发读取
+   - ✅ `get_storage_slot()` - Slot 计算
+   - ✅ 使用 Reth `StateProviderFactory` 接口
+   - ✅ 完整的日志输出（info/debug/trace 三级）
+
+3. **测试覆盖**
+   - ✅ 8 个单元测试全部通过
+   - ✅ 边界值测试（最大值、零值）
+   - ✅ 随机值测试
+   - ✅ 验证逻辑测试
+
+#### 日志示例
+
+```bash
+# Info 级别
+INFO 开始批量读取 Pool 状态 total_pools=100 block=1000000
+INFO 按协议分组统计 uniswap_v2_pools=100 uniswap_v3_pools=0
+INFO 成功读取 Pool 状态 pool=0x... elapsed_ms=2
+INFO 批量读取完成 success=98 errors=2 elapsed_ms=150
+
+# Debug 级别
+DEBUG 开始读取 Pool 状态 pool=0x... protocol=UniswapV2
+DEBUG 读取 UniswapV2 Slot 8 pool=0x... slot=8
+
+# Trace 级别
+TRACE UniswapV2 状态详情 reserve0=1000000 reserve1=2000000 timestamp=1234567890
+```
+
+#### 使用方法
+
+```rust
+use reth_exex_mev_pool_state_tracker::{PoolStateTracker, RawPoolState};
+use reth_exex_mev_pool_discovery::ProtocolType;
+
+// 创建 tracker（需要 StateProviderFactory）
+let tracker = PoolStateTracker::new(provider_factory);
+
+// 读取单个 Pool
+let state = tracker.track_pool_state(
+    pool_address,
+    block_number,
+    ProtocolType::UniswapV2
+)?;
+
+if let Some(RawPoolState::UniswapV2(v2_state)) = state {
+    println!("Reserve0: {}", v2_state.reserve0);
+    println!("Reserve1: {}", v2_state.reserve1);
+}
+
+// 批量读取
+let pools = vec![
+    (addr1, ProtocolType::UniswapV2),
+    (addr2, ProtocolType::UniswapV2),
+];
+let states = tracker.track_multiple_states(pools, block_number).await?;
+```
+
+### 9.2 待实现功能
+
+1. **UniswapV3 支持**
+   - Slot 0 读取和解析（sqrtPriceX96, tick, observationIndex）
+   - Slot 4 读取（liquidity）
+   - Tick 数据读取（mapping）
+
+2. **变化检测**
+   - `DetectChangedPools` 方法实现
+   - 基于交易分析的变化检测
+
+3. **性能优化**
+   - 状态缓存层
+   - 更高级的批量优化
+
+4. **测试增强**
+   - 集成测试（需要测试数据或 Mock Reth 节点）
+   - 性能基准测试
+
+### 9.3 技术决策
+
+| 决策项 | 选择 | 原因 |
+|-------|------|------|
+| 泛型设计 | `PoolStateTracker<P: StateProviderFactory>` | 支持不同的 Provider 实现，便于测试 |
+| 异步并发 | tokio | 与 Reth 异步运行时一致 |
+| 日志框架 | tracing | Reth 标准日志框架 |
+| 测试策略 | 单元测试优先 | 避免复杂的 Mock 设置，快速验证核心逻辑 |
+
+### 9.4 已知限制
+
+1. **UniswapV3 未实现**：接口已保留，但解析逻辑待实现
+2. **测试数据**：集成测试需要实际的区块链数据或完整的 Mock
+3. **性能基准**：尚未在实际环境中进行基准测试
+4. **缓存层**：目前直接读取 Storage，无缓存优化
+
+### 9.5 相关文档
+
+- **实现代码**: `crates/exex/mev-pool-state-tracker/`
+- **使用文档**: `crates/exex/mev-pool-state-tracker/README.md`
+- **前置依赖**: [04-Pool Discovery](./04-component-pool-discovery.md)
+- **后续组件**: [06-State Converter](./06-component-state-converter.md)
 
 ---
 

@@ -8775,6 +8775,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "reth-exex-mev-pool-state-tracker"
+version = "1.9.3"
+dependencies = [
+ "alloy-eips",
+ "alloy-primitives",
+ "eyre",
+ "futures",
+ "reth-exex",
+ "reth-exex-mev-pool-discovery",
+ "reth-exex-test-utils",
+ "reth-exex-types",
+ "reth-node-api",
+ "reth-primitives",
+ "reth-storage-api",
+ "reth-storage-errors",
+ "reth-tracing",
+ "reth-trie-common",
+ "revm-database",
+ "serde",
+ "tempfile",
+ "tokio",
+ "tracing",
+]
+
+[[package]]
 name = "reth-exex-test-utils"
 version = "1.9.3"
 dependencies = [

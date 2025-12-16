@@ -1,0 +1,47 @@
+[package]
+name = "reth-exex-mev-pool-state-tracker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+homepage.workspace = true
+repository.workspace = true
+
+[dependencies]
+# Reth dependencies
+reth-exex.workspace = true
+reth-exex-types.workspace = true
+reth-primitives.workspace = true
+reth-tracing.workspace = true
+reth-node-api.workspace = true
+reth-storage-api.workspace = true
+reth-storage-errors.workspace = true
+reth-trie-common.workspace = true
+alloy-primitives.workspace = true
+alloy-eips.workspace = true
+
+# Revm
+revm-database.workspace = true
+
+# Pool Discovery - 依赖已实现的 pool-discovery
+reth-exex-mev-pool-discovery = { path = "../mev-pool-discovery" }
+
+# Async runtime
+tokio = { workspace = true, features = ["full"] }
+futures.workspace = true
+
+# Error handling
+eyre.workspace = true
+
+# Serialization
+serde = { workspace = true, features = ["derive"] }
+
+# Tracing
+tracing.workspace = true
+
+[dev-dependencies]
+reth-exex-test-utils.workspace = true
+tempfile = "3"
+
+[lints]
+workspace = true
