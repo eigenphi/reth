@@ -13,7 +13,7 @@ use tracing::{debug, info, trace, warn};
 /// Storage Slot 常量
 mod slots {
     /// UniswapV2: Slot 8 存储 reserve0, reserve1, blockTimestampLast
-    pub const UNISWAP_V2_RESERVES: u8 = 8;
+    pub(super) const UNISWAP_V2_RESERVES: u8 = 8;
 }
 
 /// Pool State Tracker
